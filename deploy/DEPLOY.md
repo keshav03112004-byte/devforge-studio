@@ -4,7 +4,7 @@ Target domain: **neoblock.dev** (change in `deploy/nginx-neoblock.conf` if diffe
 
 ## Prerequisites
 
-- EC2 instance (Ubuntu 22.04 or 24.04 recommended)
+- EC2 instance (**Amazon Linux** or Ubuntu)
 - **Elastic IP** attached to the instance (so the IP does not change on reboot)
 - Security group: inbound **22** (SSH), **80** (HTTP), **443** (HTTPS)
 - Domain purchased on **GoDaddy**
@@ -17,19 +17,18 @@ Target domain: **neoblock.dev** (change in `deploy/nginx-neoblock.conf` if diffe
 SSH into your EC2 instance:
 
 ```bash
-ssh -i your-key.pem ubuntu@YOUR_ELASTIC_IP
+ssh -i your-key.pem ec2-user@YOUR_ELASTIC_IP
 ```
 
-Run the setup script:
+**Amazon Linux** — install git first, then clone:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/keshav03112004-byte/devforge-studio/main/deploy/server-setup.sh | bash
-```
+sudo dnf install -y git          # Amazon Linux 2023
+# sudo yum install -y git        # Amazon Linux 2 (use this if dnf fails)
 
-Or clone first and run locally:
-
-```bash
-git clone https://github.com/keshav03112004-byte/devforge-studio.git /var/www/neoblock-dev
+sudo mkdir -p /var/www
+sudo git clone https://github.com/keshav03112004-byte/devforge-studio.git /var/www/neoblock-dev
+sudo chown -R ec2-user:ec2-user /var/www/neoblock-dev
 cd /var/www/neoblock-dev
 chmod +x deploy/*.sh
 ./deploy/server-setup.sh
@@ -46,8 +45,14 @@ Edit the domain in the config if needed, then install:
 
 ```bash
 cd /var/www/neoblock-dev
-sudo cp deploy/nginx-neoblock.conf /etc/nginx/sites-available/neoblock.dev
-sudo ln -sf /etc/nginx/sites-available/neoblock.dev /etc/nginx/sites-enabled/
+
+# Amazon Linux — config goes in conf.d/
+sudo cp deploy/nginx-neoblock.conf /etc/nginx/conf.d/neoblock.dev.conf
+
+# Ubuntu only — use sites-available instead:
+# sudo cp deploy/nginx-neoblock.conf /etc/nginx/sites-available/neoblock.dev
+# sudo ln -sf /etc/nginx/sites-available/neoblock.dev /etc/nginx/sites-enabled/
+
 sudo nginx -t
 sudo systemctl reload nginx
 ```
